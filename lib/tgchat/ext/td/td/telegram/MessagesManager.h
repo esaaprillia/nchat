@@ -177,11 +177,10 @@ class MessagesManager final : public Actor {
   void on_failed_public_dialogs_search(const string &query, Status &&error);
 
   void on_get_message_search_result_calendar(DialogId dialog_id, SavedMessagesTopicId saved_messages_topic_id,
-                                             MessageId from_message_id, MessageSearchFilter filter, int64 random_id,
-                                             int32 total_count, vector<tl_object_ptr<telegram_api::Message>> &&messages,
+                                             MessageId from_message_id, MessageSearchFilter filter, int32 total_count,
+                                             vector<tl_object_ptr<telegram_api::Message>> &&messages,
                                              vector<tl_object_ptr<telegram_api::searchResultsCalendarPeriod>> &&periods,
-                                             Promise<Unit> &&promise);
-  void on_failed_get_message_search_result_calendar(int64 random_id);
+                                             Promise<td_api::object_ptr<td_api::messageCalendar>> &&promise);
 
   void on_get_dialog_messages_search_result(DialogId dialog_id, SavedMessagesTopicId saved_messages_topic_id,
                                             const string &query, DialogId sender_dialog_id, MessageId from_message_id,
@@ -344,7 +343,8 @@ class MessagesManager final : public Actor {
   void on_update_message_extended_media(MessageFullId message_full_id,
                                         telegram_api::object_ptr<telegram_api::MessageExtendedMedia> extended_media);
 
-  void on_external_update_message_content(MessageFullId message_full_id, const char *source);
+  void on_external_update_message_content(MessageFullId message_full_id, const char *source,
+                                          bool expect_no_message = false);
 
   void on_update_message_content(MessageFullId message_full_id);
 
@@ -482,26 +482,6 @@ class MessagesManager final : public Actor {
 
   void edit_message_reply_markup(MessageFullId message_full_id, tl_object_ptr<td_api::ReplyMarkup> &&reply_markup,
                                  Promise<Unit> &&promise);
-
-  void edit_inline_message_text(const string &inline_message_id, tl_object_ptr<td_api::ReplyMarkup> &&reply_markup,
-                                tl_object_ptr<td_api::InputMessageContent> &&input_message_content,
-                                Promise<Unit> &&promise);
-
-  void edit_inline_message_live_location(const string &inline_message_id,
-                                         tl_object_ptr<td_api::ReplyMarkup> &&reply_markup,
-                                         tl_object_ptr<td_api::location> &&input_location, int32 live_period,
-                                         int32 heading, int32 proximity_alert_radius, Promise<Unit> &&promise);
-
-  void edit_inline_message_media(const string &inline_message_id, tl_object_ptr<td_api::ReplyMarkup> &&reply_markup,
-                                 tl_object_ptr<td_api::InputMessageContent> &&input_message_content,
-                                 Promise<Unit> &&promise);
-
-  void edit_inline_message_caption(const string &inline_message_id, tl_object_ptr<td_api::ReplyMarkup> &&reply_markup,
-                                   tl_object_ptr<td_api::formattedText> &&input_caption, bool invert_media,
-                                   Promise<Unit> &&promise);
-
-  void edit_inline_message_reply_markup(const string &inline_message_id,
-                                        tl_object_ptr<td_api::ReplyMarkup> &&reply_markup, Promise<Unit> &&promise);
 
   void edit_message_scheduling_state(MessageFullId message_full_id,
                                      td_api::object_ptr<td_api::MessageSchedulingState> &&scheduling_state,
@@ -711,11 +691,9 @@ class MessagesManager final : public Actor {
                                                                     int32 limit, int64 &random_id,
                                                                     Promise<Unit> &&promise);
 
-  td_api::object_ptr<td_api::messageCalendar> get_dialog_message_calendar(DialogId dialog_id,
-                                                                          SavedMessagesTopicId saved_messages_topic_id,
-                                                                          MessageId from_message_id,
-                                                                          MessageSearchFilter filter, int64 &random_id,
-                                                                          bool use_db, Promise<Unit> &&promise);
+  void get_dialog_message_calendar(DialogId dialog_id, SavedMessagesTopicId saved_messages_topic_id,
+                                   MessageId from_message_id, MessageSearchFilter filter,
+                                   Promise<td_api::object_ptr<td_api::messageCalendar>> &&promise);
 
   struct FoundDialogMessages {
     vector<MessageId> message_ids;
@@ -2842,9 +2820,14 @@ class MessagesManager final : public Actor {
 
   static MessageId get_first_database_message_id_by_index(const Dialog *d, MessageSearchFilter filter);
 
-  void on_get_message_calendar_from_database(int64 random_id, DialogId dialog_id, MessageId from_message_id,
+  void get_message_calendar_from_server(DialogId dialog_id, SavedMessagesTopicId saved_messages_topic_id,
+                                        MessageId from_message_id, MessageSearchFilter filter,
+                                        Promise<td_api::object_ptr<td_api::messageCalendar>> &&promise);
+
+  void on_get_message_calendar_from_database(DialogId dialog_id, MessageId from_message_id,
                                              MessageId first_db_message_id, MessageSearchFilter filter,
-                                             Result<MessageDbCalendar> r_calendar, Promise<Unit> promise);
+                                             Result<MessageDbCalendar> r_calendar,
+                                             Promise<td_api::object_ptr<td_api::messageCalendar>> promise);
 
   void on_search_dialog_message_db_result(int64 random_id, DialogId dialog_id, MessageId from_message_id,
                                           MessageId first_db_message_id, MessageSearchFilter filter, int32 offset,
@@ -3267,7 +3250,6 @@ class MessagesManager final : public Actor {
   FlatHashMap<string, vector<DialogId>> found_public_dialogs_;     // TODO time bound cache
   FlatHashMap<string, vector<DialogId>> found_on_server_dialogs_;  // TODO time bound cache
 
-  FlatHashMap<int64, td_api::object_ptr<td_api::messageCalendar>> found_dialog_message_calendars_;
   FlatHashMap<int64, FoundDialogMessages> found_dialog_messages_;  // random_id -> FoundDialogMessages
   FlatHashMap<int64, DialogId> found_dialog_messages_dialog_id_;   // random_id -> dialog_id
   FlatHashMap<int64, FoundMessages> found_call_messages_;          // random_id -> FoundMessages
