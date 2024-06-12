@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
 
 if (POLICY CMP0065)
   # do not export symbols from executables
@@ -168,13 +168,13 @@ add_subdirectory(tdutils)
 add_subdirectory(td/generate)
 
 if (NOT CMAKE_CROSSCOMPILING)
-  add_custom_target(prepare_cross_compiling DEPENDS tl_generate_common tdmime_auto tl_generate_json)
+  add_custom_target(prepare_cross_compiling DEPENDS tl_generate_mtproto tl_generate_common tdmime_auto tl_generate_json)
   if (TD_ENABLE_DOTNET)
     add_custom_target(remove_cpp_documentation
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
       COMMAND remove_documentation ${TL_TD_API_AUTO_SOURCE} td/telegram/Client.h td/telegram/Log.h td/tl/TlObject.h
       COMMENT "Remove C++ documentation from sources"
-      DEPENDS remove_documentation tl_generate_common generate_dotnet_api ${TL_TD_API_AUTO_SOURCE} td/telegram/Client.h td/telegram/Log.h td/tl/TlObject.h
+      DEPENDS remove_documentation tl_generate_mtproto tl_generate_common generate_dotnet_api ${TL_TD_API_AUTO_SOURCE} td/telegram/Client.h td/telegram/Log.h td/tl/TlObject.h
     )
 
     add_dependencies(prepare_cross_compiling generate_dotnet_api remove_cpp_documentation)
@@ -431,6 +431,7 @@ set(TDLIB_SOURCE_PART1
   td/telegram/GroupCallParticipantOrder.cpp
   td/telegram/GroupCallVideoPayload.cpp
   td/telegram/HashtagHints.cpp
+  td/telegram/InlineMessageManager.cpp
   td/telegram/InlineQueriesManager.cpp
   td/telegram/InputBusinessChatLink.cpp
   td/telegram/InputDialogId.cpp
@@ -730,6 +731,7 @@ set(TDLIB_SOURCE_PART2
   td/telegram/GroupCallParticipantOrder.h
   td/telegram/GroupCallVideoPayload.h
   td/telegram/HashtagHints.h
+  td/telegram/InlineMessageManager.h
   td/telegram/InlineQueriesManager.h
   td/telegram/InputBusinessChatLink.h
   td/telegram/InputDialogId.h
@@ -1083,6 +1085,9 @@ if (WIN32)
     target_link_libraries(tdmtproto PRIVATE ws2_32 Mswsock Crypt32)
   endif()
 endif()
+if (NOT CMAKE_CROSSCOMPILING)
+  add_dependencies(tdmtproto tl_generate_mtproto)
+endif()
 
 # tdcore - mostly internal TDLib interface. One should use tdactor for interactions with it.
 if (MSVC AND TD_ENABLE_LTO)
@@ -1325,11 +1330,3 @@ install(FILES "TdConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/TdConfigVersion.cmak
 set_property(TARGET tdclient PROPERTY SOVERSION "${TDLib_VERSION}")
 set_property(TARGET tdapi PROPERTY SOVERSION "${TDLib_VERSION}")
 set_property(TARGET tdjson PROPERTY SOVERSION "${TDLib_VERSION}")
-
-# nchat additions start
-add_library(tdclientshared SHARED td/telegram/Client.cpp td/telegram/Client.h td/telegram/Log.cpp td/telegram/Log.h)
-target_include_directories(tdclientshared PUBLIC
-  $<BUILD_INTERFACE:>
- )
-target_link_libraries(tdclientshared PUBLIC tdcore)
-# nchat additions end

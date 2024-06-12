@@ -8065,16 +8065,16 @@ searchCallMessages offset:string limit:int32 only_missed:Bool = FoundMessages;
 //@limit The maximum number of messages to be returned; up to 100
 searchOutgoingDocumentMessages query:string limit:int32 = FoundMessages;
 
-//@description Searches for public channel posts with the given hashtag. For optimal performance, the number of returned messages is chosen by TDLib and can be smaller than the specified limit
-//@hashtag Hashtag to search for
+//@description Searches for public channel posts with the given hashtag or cashtag. For optimal performance, the number of returned messages is chosen by TDLib and can be smaller than the specified limit
+//@hashtag Hashtag or cashtag to search for
 //@offset Offset of the first entry to return as received from the previous request; use empty string to get the first chunk of results
 //@limit The maximum number of messages to be returned; up to 100. For optimal performance, the number of returned messages is chosen by TDLib and can be smaller than the specified limit
 searchPublicHashtagMessages hashtag:string offset:string limit:int32 = FoundMessages;
 
-//@description Returns recently searched for hashtags by their prefix @prefix Prefix of hashtags to return @limit The maximum number of hashtags to be returned
+//@description Returns recently searched for hashtags or cashtags by their prefix @prefix Prefix of hashtags or cashtags to return @limit The maximum number of items to be returned
 getSearchedForHashtags prefix:string limit:int32 = Hashtags;
 
-//@description Removes a hashtag from the list of recently searched for hashtags @hashtag Hashtag to delete
+//@description Removes a hashtag or a cashtag from the list of recently searched for hashtags or cashtags @hashtag Hashtag or cashtag to delete
 removeSearchedForHashtag hashtag:string = Ok;
 
 //@description Clears the list of recently searched for hashtags
@@ -8367,7 +8367,7 @@ editMessageSchedulingState chat_id:int53 message_id:int53 scheduling_state:Messa
 
 //@description Changes the fact-check of a message. Can be only used if getOption("can_edit_fact_check") == true
 //@chat_id The channel chat the message belongs to
-//@message_id Identifier of the message
+//@message_id Identifier of the message. The message must be one of the following types: messageAnimation, messageAudio, messageDocument, messagePhoto, messageText, messageVideo
 //@text New text of the fact-check; 0-getOption("fact_check_length_max") characters; pass null to remove it. Only Bold, Italic, and TextUrl entities with https://t.me/ links are supported
 setMessageFactCheck chat_id:int53 message_id:int53 text:formattedText = Ok;
 
