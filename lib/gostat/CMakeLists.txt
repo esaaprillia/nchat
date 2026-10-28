@@ -51,7 +51,6 @@ get_filename_component(SG_GO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../sgchat/go" ABSO
 # Acquire libsignal_ffi.a (shared with the standalone Signal build); the Signal
 # build tooling (build-libsignal.sh, ext/signal) lives in lib/sgchat/go.
 set(SIGNAL_GO_DIR ${SG_GO_DIR})
-include(${SG_GO_DIR}/libsignal.cmake)
 
 # Build the combined Go library / C archive
 set(TARGET cgogostat)
