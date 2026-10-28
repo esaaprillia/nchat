@@ -51,7 +51,6 @@ set(LIB "libcgosg${LIBSUFFIX}")
 # Acquire libsignal_ffi.a (download pre-built or build from source), sets
 # LIBSIGNAL_FFI_DIR / LIBSIGNAL_FFI_FILE here and LIBSIGNAL_FFI_PATH in the
 # parent scope. Shared with lib/gostat (combined WhatsApp+Signal c-archive).
-include(${CMAKE_CURRENT_SOURCE_DIR}/libsignal.cmake)
 
 add_custom_command(OUTPUT ${OUTPUT_DIR}/${LIB}
   DEPENDS ${SRCS}
